@@ -115,7 +115,21 @@ function withIds(list: any[]): Work[] {
   }));
 }
 
-/* ============ Окно чтения (СВЕТЛАЯ ТЕМА) ============ */
+/* ============ Окно чтения (СВЕТЛАЯ ТЕМА С ЧЕРНЫМ ТЕКСТОМ) ============ */
+
+const readerStyles = `
+  .reader-content { color: black !important; }
+  .reader-content p { margin-bottom: 1.5em; line-height: 1.8; color: black !important; }
+  .reader-content h1, .reader-content h2, .reader-content h3 { font-weight: bold; margin-top: 2em; margin-bottom: 1em; color: black !important; }
+  .reader-content h1 { font-size: 2.25rem; }
+  .reader-content h2 { font-size: 1.875rem; }
+  .reader-content h3 { font-size: 1.5rem; }
+  .reader-content strong, .reader-content b { font-weight: 900 !important; color: black !important; }
+  .reader-content em, .reader-content i { font-style: italic !important; color: black !important; }
+  .reader-content ul, .reader-content ol { margin-left: 1.5rem; margin-bottom: 1.5em; color: black !important; }
+  .reader-content ul { list-style-type: disc; }
+  .reader-content ol { list-style-type: decimal; }
+`;
 
 function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void }) {
   const [html, setHtml] = useState('');
@@ -210,6 +224,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] flex flex-col bg-white"
         >
+          <style>{readerStyles}</style>
           <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-bold text-gray-900 truncate">{work.title}</h2>
             <div className="flex items-center gap-2">
@@ -226,7 +241,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
               {loading && <div className="flex flex-col items-center py-20 text-gray-400"><Loader2 className="animate-spin mb-4" size={40} /><p>Загрузка...</p></div>}
               {!loading && error && <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-600"><p>{error}</p></div>}
               {!loading && !error && html && (
-                <div className="prose prose-lg max-w-none prose-p:leading-relaxed prose-p:text-gray-800" dangerouslySetInnerHTML={{ __html: html }} />
+                <div className="reader-content max-w-none text-black text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />
               )}
             </div>
           </div>
