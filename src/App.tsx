@@ -93,14 +93,11 @@ async function deleteStoredFile(key: string): Promise<void> {
 /* ============ Хелперы ============ */
 
 function getBase(): string {
-  try {
-    const m = import.meta as any;
-    return (m.env && m.env.BASE_URL) || '/';
-  } catch {
-    return '/';
-  }
+  const path = window.location.pathname;
+  const idx = path.indexOf('/index.html');
+  if (idx > 0) return path.slice(0, idx + 1);
+  return path.endsWith('/') ? path : path + '/';
 }
-
 function readJSON<T>(key: string, fallback: T): T {
   try {
     const v = localStorage.getItem(key);
