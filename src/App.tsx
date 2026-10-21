@@ -1,155 +1,106 @@
 import { useState, useEffect } from 'react';
-import { Cpu, FileText, Book } from 'lucide-react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import About from './components/About';
-import LiteratureSection, { Work } from './components/LiteratureSection';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
-
-function App() {
-  const [aiWorks, setAiWorks] = useState<Work[]>([]);
-  const [personalStories, setPersonalStories] = useState<Work[]>([]);
-  const [personalBooks, setPersonalBooks] = useState<Work[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authorPassword, setAuthorPassword] = useState('автор');
-  const [aboutContent, setAboutContent] = useState('');
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
-
+import { Cpu, BookText, LibraryBig } from 'lucide-react';
+import { Work } from './types';
+import { defaultAiWorks } from './data/works';
+import { Navbar } from './components/Navbar';
+import { HeroSection } from './components/HeroSection';
+import { AboutSection } from './components/AboutSection';
+import { WorksSection } from './components/WorksSection';
+import { ContactSection } from './components/ContactSection';
+import { FooterBar } from './components/FooterBar';
+import { ReaderModal } from './components/ReaderModal';
+export default function App() {
+  const [aiWorks, setAiWorks] = useState<Work[]>(() => {
+    const saved = localStorage.getItem('aiWorks');
+    return saved ? JSON.parse(saved) : defaultAiWorks;
+  });
+  const [personalStories, setPersonalStories] = useState<Work[]>(() => {
+    const saved = localStorage.getItem('personalStories');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [personalBooks, setPersonalBooks] = useState<Work[]>(() => {
+    const saved = localStorage.getItem('personalBooks');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [aboutContent, setAboutContent] = useState<string>(() => {
+    const saved = localStorage.getItem('aboutContent');
+    return saved ? JSON.parse(saved) : '';
+  });
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [readerWork, setReaderWork] = useState<Work | null>(null);
+  useEffect(() => { localStorage.setItem('aiWorks', JSON.stringify(aiWorks)); }, [aiWorks]);
+  useEffect(() => { localStorage.setItem('personalStories', JSON.stringify(personalStories)); }, [personalStories]);
+  useEffect(() => { localStorage.setItem('personalBooks', JSON.stringify(personalBooks)); }, [personalBooks]);
+  useEffect(() => { localStorage.setItem('aboutContent', JSON.stringify(aboutContent)); }, [aboutContent]);
   const handleLogin = () => {
-    const pass = prompt('Введите пароль автора:');
-    if (pass === authorPassword) {
-      setIsAdmin(true);
-      sessionStorage.setItem('isAdmin', 'true');
-    } else {
-      if (pass !== null) alert('Неверный пароль');
-    }
+    const pw = prompt('Введите пароль автора:');
+    if (pw === 'author2024') setIsAdmin(true); // Замените на ваш пароль
+    else if (pw !== null) alert('Неверный пароль');
   };
-
-  const handleChangePassword = () => {
-    const newPass = prompt('Введите новый пароль:');
-    if (newPass && newPass.trim().length > 0) {
-      setAuthorPassword(newPass);
-      localStorage.setItem('authorPassword', newPass);
-      alert('Пароль успешно изменен!');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAdmin(false);
-    sessionStorage.removeItem('isAdmin');
-  };
-
-  useEffect(() => {
-    const adminStatus = sessionStorage.getItem('isAdmin');
-    if (adminStatus === 'true') setIsAdmin(true);
-
-    const savedPass = localStorage.getItem('authorPassword');
-    if (savedPass) setAuthorPassword(savedPass);
-    
-    const savedAi = localStorage.getItem('aiWorks');
-    const savedStories = localStorage.getItem('personalStories');
-    const savedBooks = localStorage.getItem('personalBooks');
-    const savedAbout = localStorage.getItem('aboutContent');
-
-    if (savedAi) setAiWorks(JSON.parse(savedAi));
-    if (savedStories) setPersonalStories(JSON.parse(savedStories));
-    if (savedBooks) setPersonalBooks(JSON.parse(savedBooks));
-    if (savedAbout) setAboutContent(savedAbout);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('aiWorks', JSON.stringify(aiWorks));
-  }, [aiWorks]);
-
-  useEffect(() => {
-    localStorage.setItem('personalStories', JSON.stringify(personalStories));
-  }, [personalStories]);
-
-  useEffect(() => {
-    localStorage.setItem('personalBooks', JSON.stringify(personalBooks));
-  }, [personalBooks]);
-
-  useEffect(() => {
-    localStorage.setItem('aboutContent', aboutContent);
-  }, [aboutContent]);
-
-  const toggleAbout = () => {
-    if (isAdmin || aboutContent.trim().length > 0) {
-      // Если закрыто - открываем, если открыто - просто перемещаемся к началу
-      setIsAboutOpen(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-stone-900 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-stone-900 text-white selection:bg-indigo-500">
       <Navbar 
         isAdmin={isAdmin} 
         hasAi={aiWorks.length > 0} 
         hasStories={personalStories.length > 0} 
         hasBooks={personalBooks.length > 0} 
-        onAboutClick={toggleAbout}
+        onAboutClick={() => setAboutOpen(!aboutOpen)} 
       />
+      
       <main>
-        <About 
-          isOpen={isAboutOpen}
-          onClose={() => setIsAboutOpen(false)}
-          isAdmin={isAdmin}
-          content={aboutContent}
-          onSave={(newContent) => {
-            setAboutContent(newContent);
-            alert('Данные сохранены!');
-          }}
-        />
-        <Hero 
+        <AboutSection 
+          isOpen={aboutOpen} 
+          onClose={() => setAboutOpen(false)} 
           isAdmin={isAdmin} 
+          content={aboutContent} 
+          onSave={setAboutContent} 
+        />
+        
+        <HeroSection 
           hasAi={aiWorks.length > 0} 
           hasStories={personalStories.length > 0} 
           hasBooks={personalBooks.length > 0} 
         />
-        
-        <LiteratureSection 
+        <WorksSection 
           id="ai-stories" 
           title="ИИ-истории" 
-          icon={<Cpu size={24} />} 
-          works={aiWorks}
-          isAdmin={isAdmin}
-          onAddWork={(work) => setAiWorks([work, ...aiWorks])}
-          onDeleteWork={(index) => setAiWorks(aiWorks.filter((_, i) => i !== index))}
+          icon={<Cpu size={28} />} 
+          works={aiWorks} 
+          isAdmin={isAdmin} 
+          onAddWork={(w) => setAiWorks([w, ...aiWorks])}
+          onDeleteWork={(i) => setAiWorks(aiWorks.filter((_, idx) => idx !== i))}
+          onReadWork={setReaderWork}
         />
-
-        <LiteratureSection 
+        <WorksSection 
           id="my-stories" 
           title="Мои собственные рассказы" 
-          icon={<FileText size={24} />} 
-          works={personalStories}
-          isAdmin={isAdmin}
-          onAddWork={(work) => setPersonalStories([work, ...personalStories])}
-          onDeleteWork={(index) => setPersonalStories(personalStories.filter((_, i) => i !== index))}
+          icon={<BookText size={28} />} 
+          works={personalStories} 
+          isAdmin={isAdmin} 
+          onAddWork={(w) => setPersonalStories([w, ...personalStories])}
+          onDeleteWork={(i) => setPersonalStories(personalStories.filter((_, idx) => idx !== i))}
+          onReadWork={setReaderWork}
         />
-
-        <LiteratureSection 
+        <WorksSection 
           id="my-books" 
           title="Мои собственные книги" 
-          icon={<Book size={24} />} 
-          works={personalBooks}
-          isAdmin={isAdmin}
-          onAddWork={(work) => setPersonalBooks([work, ...personalBooks])}
-          onDeleteWork={(index) => setPersonalBooks(personalBooks.filter((_, i) => i !== index))}
+          icon={<LibraryBig size={28} />} 
+          works={personalBooks} 
+          isAdmin={isAdmin} 
+          onAddWork={(w) => setPersonalBooks([w, ...personalBooks])}
+          onDeleteWork={(i) => setPersonalBooks(personalBooks.filter((_, idx) => idx !== i))}
+          onReadWork={setReaderWork}
         />
-
-        <Contact />
+        <ContactSection />
       </main>
-      <Footer 
+      <FooterBar 
         isAdmin={isAdmin} 
         onLogin={handleLogin} 
-        onLogout={handleLogout}
-        onChangePassword={handleChangePassword}
-        hasAnyContent={aiWorks.length > 0 || personalStories.length > 0 || personalBooks.length > 0}
+        onLogout={() => setIsAdmin(false)} 
+        onChangePassword={() => alert('Функция в разработке')} 
       />
+      <ReaderModal work={readerWork} onClose={() => setReaderWork(null)} />
     </div>
   );
 }
-
-export default App;
