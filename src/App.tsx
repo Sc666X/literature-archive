@@ -219,10 +219,10 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex flex-col bg-stone-950"
+          className="fixed inset-0 z-[9999] flex flex-col bg-white"
         >
-          <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-stone-900/90">
-            <h2 className="text-lg font-bold text-white truncate">{work.title}</h2>
+          <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 <h2 className="text-lg font-bold text-gray-900 truncate">{work.title}</h2>
             <div className="flex items-center gap-2 shrink-0">
               {(work.filePath || work.fileName) && (
                 <button
@@ -238,7 +238,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto bg-stone-900">
+          <div className="flex-1 overflow-y-auto bg-white">
             <div className="max-w-3xl mx-auto px-6 py-12">
               {loading && (
                 <div className="flex flex-col items-center py-20 text-gray-400">
@@ -254,7 +254,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
               )}
               {!loading && !error && html && (
                 <div
-                  className="prose prose-invert prose-indigo max-w-none prose-p:leading-relaxed prose-p:text-gray-300 prose-headings:text-white"
+                  className="prose prose-lg max-w-none prose-p:leading-relaxed prose-p:text-gray-700 prose-headings:text-gray-900"
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               )}
