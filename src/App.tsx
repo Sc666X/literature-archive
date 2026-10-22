@@ -367,6 +367,7 @@ export default function App() {
   };
 
   const heroUrl = `${getBase()}hero-custom.jpg`.replace(/\/\//g, '/');
+  const hasAny = aiWorks.length > 0 || stories.length > 0 || books.length > 0;
 
   return (
     <div className="min-h-screen bg-stone-900 selection:bg-indigo-500 selection:text-white">
