@@ -16,11 +16,11 @@ interface Work {
   date: string;
   fileName?: string;
   fileType?: string;
-  filePath?: string; 
+  filePath?: string;
   content?: string;
 }
 
-/* ============ Работы по умолчанию ============ */
+/* ============ Работы по умолчанию (видны всем) ============ */
 
 const DEFAULT_AI_WORKS: Work[] = [
   {
@@ -34,7 +34,7 @@ const DEFAULT_AI_WORKS: Work[] = [
   },
 ];
 
-/* ============ Хранилище (IndexedDB) ============ */
+/* ============ Хранилище файлов автора (IndexedDB) ============ */
 
 const DB_NAME = 'literatureArchive';
 const STORE_NAME = 'files';
@@ -115,7 +115,7 @@ function withIds(list: any[]): Work[] {
   }));
 }
 
-/* ============ Окно чтения (СВЕТЛАЯ ТЕМА С ЧЕРНЫМ ТЕКСТОМ) ============ */
+/* ============ Стили для читалки ============ */
 
 const readerStyles = `
   .reader-content { color: black !important; }
@@ -130,6 +130,8 @@ const readerStyles = `
   .reader-content ul { list-style-type: disc; }
   .reader-content ol { list-style-type: decimal; }
 `;
+
+/* ============ Окно чтения ============ */
 
 function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void }) {
   const [html, setHtml] = useState('');
@@ -184,9 +186,9 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
           setHtml(`<div class="whitespace-pre-wrap">${work.content.replace(/</g, '&lt;')}</div>`);
           return;
         }
-        if (!cancelled) setError('Файл не найден на сервере.');
+        if (!cancelled) setError('Файл пока недоступен.');
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Ошибка открытия.');
+        if (!cancelled) setError(e?.message || 'Не удалось открыть произведение.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -198,25 +200,6 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
     };
   }, [work]);
 
-  const handleDownload = async () => {
-    if (!work) return;
-    if (work.filePath) {
-      const a = document.createElement('a');
-      a.href = `${getBase()}library/${work.filePath}`.replace(/\/\//g, '/');
-      a.download = work.filePath;
-      a.click();
-      return;
-    }
-    const f = await loadFile(work.id);
-    if (!f) return;
-    const url = URL.createObjectURL(f);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = f.name || 'document.docx';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  };
-
   return (
     <AnimatePresence>
       {work && (
@@ -227,10 +210,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
           <style>{readerStyles}</style>
           <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-bold text-gray-900 truncate">{work.title}</h2>
-            <div className="flex items-center gap-2">
-              
-              <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full"><X size={24} /></button>
-            </div>
+            <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full"><X size={24} /></button>
           </div>
           <div className="flex-1 overflow-y-auto bg-white">
             <div className="max-w-3xl mx-auto px-6 py-12">
@@ -249,7 +229,18 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
 
 /* ============ Секция произведений ============ */
 
-function WorksSection({ id, title, icon, works, isAdmin, onAddWork, onDeleteWork, onReadWork }: any) {
+interface SectionProps {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  works: Work[];
+  isAdmin: boolean;
+  onAddWork: (w: Work) => void;
+  onDeleteWork: (index: number) => void;
+  onReadWork: (w: Work) => void;
+}
+
+function WorksSection({ id, title, icon, works, isAdmin, onAddWork, onDeleteWork, onReadWork }: SectionProps) {
   const [showForm, setShowForm] = useState(false);
   const [fTitle, setFTitle] = useState('');
   const [fDesc, setFDesc] = useState('');
@@ -260,15 +251,18 @@ function WorksSection({ id, title, icon, works, isAdmin, onAddWork, onDeleteWork
     e.preventDefault();
     if (!fTitle.trim()) return;
     const nid = `work-${Date.now()}`;
-    if (fFile) await saveFile(nid, fFile);
-    onAddWork({
-      id: nid,
-      title: fTitle.trim(),
-      description: fDesc.trim(),
-      date: new Date().toLocaleDateString('ru-RU'),
-      fileName: fFile ? fFile.name : undefined,
-    });
+    if (fFile) {
+      try { await saveFile(nid, fFile); }
+      catch { alert('Не удалось сохранить файл.'); return; }
+    }
+    onAddWork({ id: nid, title: fTitle.trim(), description: fDesc.trim(), date: new Date().toLocaleDateString('ru-RU'), fileName: fFile ? fFile.name : undefined, fileType: fFile ? fFile.type : undefined });
     setFTitle(''); setFDesc(''); setFFile(null); setShowForm(false);
+  };
+
+  const remove = async (index: number) => {
+    if (!confirm('Удалить это произведение?')) return;
+    await deleteStoredFile(works[index].id);
+    onDeleteWork(index);
   };
 
   if (works.length === 0 && !isAdmin) return null;
@@ -282,45 +276,81 @@ function WorksSection({ id, title, icon, works, isAdmin, onAddWork, onDeleteWork
             <h2 className="text-3xl font-bold text-white">{title}</h2>
           </div>
           {isAdmin && (
-            <button onClick={() => setShowForm(!showForm)} className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold">
-              {showForm ? 'Отмена' : 'Добавить'}
+            <button onClick={() => setShowForm((s) => !s)} className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/20 self-start">
+              {showForm ? <X size={20} /> : <Plus size={20} />}
+              <span>{showForm ? 'Отмена' : 'Добавить'}</span>
             </button>
           )}
         </div>
         {isAdmin && showForm && (
           <form onSubmit={submit} className="mb-12 p-8 bg-white/5 border border-indigo-500/30 rounded-2xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <input type="text" value={fTitle} onChange={e => setFTitle(e.target.value)} className="w-full px-4 py-3 bg-stone-800 border border-white/10 rounded-lg text-white" placeholder="Название..." required />
-              <button type="button" onClick={() => fileRef.current?.click()} className="w-full px-4 py-3 bg-stone-800 border border-white/10 border-dashed rounded-lg text-gray-400">
-                {fFile ? fFile.name : 'Выбрать файл...'}
-              </button>
-              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e => setFFile(e.target.files?.[0] ?? null)} />
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Название произведения</label>
+                <input type="text" value={fTitle} onChange={(e) => setFTitle(e.target.value)} className="w-full px-4 py-3 bg-stone-800 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Введите название..." required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Файл (PDF, DOCX)</label>
+                <button type="button" onClick={() => fileRef.current?.click()} className="w-full px-4 py-3 bg-stone-800 border border-white/10 border-dashed rounded-lg text-gray-400 hover:border-indigo-500/50 transition-all flex items-center justify-between gap-2">
+                  <span className="truncate">{fFile ? fFile.name : 'Выберите файл...'}</span>
+                  <Paperclip size={16} className="shrink-0" />
+                </button>
+                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={(e) => setFFile(e.target.files?.[0] ?? null)} />
+              </div>
             </div>
-            <textarea value={fDesc} onChange={e => setFDesc(e.target.value)} className="w-full px-4 py-3 bg-stone-800 border border-white/10 rounded-lg text-white mb-6" placeholder="Описание..." rows={3} />
-            <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-lg font-bold">Сохранить</button>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-400 mb-2">Краткое описание</label>
+              <textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} className="w-full px-4 py-3 bg-stone-800 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none" placeholder="О чем это произведение?" rows={3} />
+            </div>
+            <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all">Сохранить и загрузить</button>
           </form>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {works.map((w: Work, i: number) => (
-            <div key={w.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col h-full group">
-              <div className="flex justify-between mb-4 gap-2">
-                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-indigo-400 transition-colors">{w.title}</h3>
-                <span className="text-[10px] text-gray-500 uppercase shrink-0">{w.date}</span>
+        {works.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {works.map((w, i) => (
+              <div key={w.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4 gap-2">
+                  <h3 className="text-xl font-bold text-white leading-tight">{w.title}</h3>
+                  {w.date && <span className="text-[10px] font-bold text-gray-500 uppercase shrink-0 mt-1">{w.date}</span>}
+                </div>
+                <p className="text-gray-400 text-sm mb-6 flex-grow leading-relaxed">{w.description}</p>
+                {(w.fileName || w.filePath) && (
+                  <div className="mb-4 flex items-center space-x-2 text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded w-fit max-w-full">
+                    <Paperclip size={12} className="shrink-0" />
+                    <span className="truncate max-w-[150px]">{w.fileName || w.filePath}</span>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onReadWork(w)}
+                    className="flex-grow py-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-300 hover:text-white hover:shadow-lg hover:shadow-indigo-600/30 rounded-lg text-sm font-semibold transition-all flex items-center justify-center space-x-2"
+                  >
+                    <span>Читать</span>
+                    <BookOpen size={14} />
+                  </button>
+                  {isAdmin && (
+                    <button onClick={() => remove(i)} className="p-3 bg-red-500/10 hover:bg-red-500/25 text-red-400 rounded-lg transition-colors" title="Удалить">
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">{w.description}</p>
-              <div className="flex gap-2">
-                <button onClick={() => onReadWork(w)} className="flex-grow py-3 bg-indigo-600/10 text-indigo-300 rounded-lg text-sm font-semibold">Читать</button>
-                {isAdmin && <button onClick={() => onDeleteWork(i)} className="p-3 bg-red-500/10 text-red-400 rounded-lg"><Trash2 size={16} /></button>}
-              </div>
+            ))}
+          </div>
+        ) : (
+          isAdmin && (
+            <div className="py-20 px-6 border border-dashed border-white/10 rounded-3xl text-center bg-white/[0.02]">
+              <p className="text-gray-500 text-lg">Секция пуста</p>
+              <p className="text-gray-600 text-sm mt-2">Используйте кнопку «Добавить», чтобы загрузить ваше первое произведение.</p>
             </div>
-          ))}
-        </div>
+          )
+        )}
       </div>
     </section>
   );
 }
 
-/* ============ ПРИЛОЖЕНИЕ ============ */
+/* ============ Приложение ============ */
 
 export default function App() {
   const [aiWorks, setAiWorks] = useState<Work[]>(() => withIds(readJSON<any[]>('aiWorks', [])));
@@ -333,7 +363,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem('aiWorks')) setAiWorks(DEFAULT_AI_WORKS);
+    const raw = localStorage.getItem('aiWorks');
+    if (!raw) setAiWorks(DEFAULT_AI_WORKS);
   }, []);
 
   useEffect(() => { localStorage.setItem('aiWorks', JSON.stringify(aiWorks)); }, [aiWorks]);
@@ -342,77 +373,143 @@ export default function App() {
   useEffect(() => { localStorage.setItem('aboutContent', JSON.stringify(about)); }, [about]);
   useEffect(() => { localStorage.setItem('isAdmin', JSON.stringify(isAdmin)); }, [isAdmin]);
 
+  const checkPassword = (): boolean => {
+    const stored = localStorage.getItem('authorPassword');
+    const entered = prompt('Введите пароль автора:');
+    if (entered === null) return false;
+    if (stored) { if (entered === stored) return true; }
+    else if (entered === 'author2024') { return true; }
+    alert('Неверный пароль');
+    return false;
+  };
+
   const heroUrl = `${getBase()}hero-custom.jpg`.replace(/\/\//g, '/');
+  const hasAny = aiWorks.length > 0 || stories.length > 0 || books.length > 0;
 
   return (
-    <div className="min-h-screen bg-stone-900 selection:bg-indigo-500 text-white">
+    <div className="min-h-screen bg-stone-900 selection:bg-indigo-500 selection:text-white">
       <nav className="sticky top-0 z-40 bg-stone-900/85 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => { setAboutOpen(!aboutOpen); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-            <BookOpen size={24} className="text-indigo-400" /><span className="font-bold">Козлов Константин</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2 cursor-pointer group" onClick={() => { setAboutOpen((o) => !o); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <BookOpen size={24} className="text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+              <span className="font-bold text-white group-hover:text-indigo-300 transition-colors">Козлов Константин</span>
+            </div>
+            <div className="hidden md:flex space-x-8 text-sm font-medium">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">Главная</a>
+              {(aiWorks.length > 0 || isAdmin) && <a href="#ai-stories" className="text-gray-400 hover:text-white transition-colors">ИИ-Истории</a>}
+              {(stories.length > 0 || isAdmin) && <a href="#my-stories" className="text-gray-400 hover:text-white transition-colors">Рассказы</a>}
+              {(books.length > 0 || isAdmin) && <a href="#my-books" className="text-gray-400 hover:text-white transition-colors">Книги</a>}
+              <a href="#contact" className="text-gray-400 hover:text-white transition-colors">Контакты</a>
+            </div>
+            <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setMenuOpen((o) => !o)} aria-label="Меню">
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
-          <div className="hidden md:flex space-x-8 text-sm font-medium">
-            <a href="#" className="text-gray-400 hover:text-white">Главная</a>
-            <a href="#ai-stories" className="text-gray-400 hover:text-white">ИИ-Истории</a>
-            <a href="#contact" className="text-gray-400 hover:text-white">Контакты</a>
-          </div>
-          <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}><Menu size={24} /></button>
         </div>
+        {menuOpen && (
+          <div className="md:hidden bg-stone-900 border-t border-white/5">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {[{ href: '#', label: 'Главная' }, { href: '#ai-stories', label: 'ИИ-Истории' }, { href: '#my-stories', label: 'Рассказы' }, { href: '#my-books', label: 'Книги' }, { href: '#contact', label: 'Контакты' }].map((l) => (
+                <a key={l.label} href={l.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2 text-base font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-md">{l.label}</a>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       <main>
         <AnimatePresence>
           {aboutOpen && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-indigo-950 p-16 border-b border-white/10">
-              <div className="max-w-3xl mx-auto">
-                <div className="flex justify-between mb-8">
-                  <h2 className="text-3xl font-bold">О себе</h2>
-                  <button onClick={() => setAboutOpen(false)}><X size={28} /></button>
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-indigo-950 text-white overflow-hidden border-b border-indigo-500/20">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="flex justify-between items-start mb-12">
+                  <div className="flex items-center space-x-4"><div className="p-3 bg-indigo-600 rounded-xl text-white"><User size={24} /></div><h2 className="text-3xl font-bold">О себе</h2></div>
+                  <button onClick={() => setAboutOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={28} /></button>
                 </div>
-                {isAdmin ? (
-                  <div className="space-y-4">
-                    <textarea id="about-txt" defaultValue={about} className="w-full h-48 bg-white/5 border border-white/10 p-4 rounded-xl text-white" />
-                    <button onClick={() => { setAbout((document.getElementById('about-txt') as any).value); alert('Сохранено!'); }} className="px-6 py-3 bg-indigo-600 rounded-lg font-bold">Сохранить</button>
-                  </div>
-                ) : <div className="text-gray-300 text-lg leading-relaxed">{about || 'Информация скоро будет...'}</div>}
+                <div className="max-w-3xl mx-auto">
+                  {isAdmin ? (
+                    <div className="space-y-6">
+                      <textarea id="about-textarea" defaultValue={about} className="w-full h-64 px-4 py-3 bg-white/5 border border-indigo-500/30 rounded-xl text-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none font-light leading-relaxed text-lg" placeholder="Расскажите о себе..." />
+                      <button onClick={() => { const el = document.getElementById('about-textarea') as HTMLTextAreaElement | null; if (el) { setAbout(el.value); alert('Данные сохранены!'); } }} className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-600/20"><Save size={20} /><span>Сохранить изменения</span></button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6 text-gray-300 text-lg leading-relaxed font-light">
+                      {about ? about.split('\n').map((p, i) => <p key={i}>{p}</p>) : <p className="italic text-gray-500">Информация будет добавлена в ближайшее время.</p>}
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${heroUrl}')` }}><div className="absolute inset-0 bg-black/40" /></div>
-          <h1 className="relative z-10 text-5xl md:text-6xl font-bold text-center">Литературное хранилище</h1>
-          <motion.a href="#ai-stories" className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce"><ChevronDown size={32} /></motion.a>
+        <section className="relative h-[60vh] w-full flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${heroUrl}')` }}><div className="absolute inset-0 bg-black/40" /></div>
+          <div className="relative z-10 text-center px-4 max-w-4xl">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Литературное хранилище</h1>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {(aiWorks.length > 0 || isAdmin) && <a href="#ai-stories" className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">ИИ-истории</a>}
+              {(stories.length > 0 || isAdmin) && <a href="#my-stories" className="px-6 py-3 bg-white/10 text-white border border-white/20 rounded-lg font-bold hover:bg-white/20 transition-all backdrop-blur-sm">Рассказы</a>}
+              {(books.length > 0 || isAdmin) && <a href="#my-books" className="px-6 py-3 bg-white/10 text-white border border-white/20 rounded-lg font-bold hover:bg-white/20 transition-all backdrop-blur-sm">Книги</a>}
+            </div>
+          </div>
+          <motion.a href="#ai-stories" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }} className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/50 animate-bounce hover:text-white transition-colors cursor-pointer"><ChevronDown size={32} /></motion.a>
         </section>
 
-        <WorksSection id="ai-stories" title="ИИ-истории" icon={<Cpu size={28} />} works={aiWorks} isAdmin={isAdmin} onAddWork={(w: any) => setAiWorks([w, ...aiWorks])} onDeleteWork={(i: number) => setAiWorks(aiWorks.filter((_, x) => x !== i))} onReadWork={setReader} />
-        <WorksSection id="my-stories" title="Рассказы" icon={<BookText size={28} />} works={stories} isAdmin={isAdmin} onAddWork={(w: any) => setStories([w, ...stories])} onDeleteWork={(i: number) => setStories(stories.filter((_, x) => x !== i))} onReadWork={setReader} />
-        
-        <section id="contact" className="py-24 bg-stone-50 text-stone-900 scroll-mt-16">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
-            <h2 className="text-4xl font-bold mb-12">Связаться со мной</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl bg-white p-12 rounded-3xl shadow-xl">
-              <div className="space-y-6">
-                <p className="text-gray-600">Буду рад вашему сообщению!</p>
-                <div><h4 className="font-bold text-indigo-600">Email</h4><p>kostya.kozlov280.dmit@gmail.com</p></div>
-                <div><h4 className="font-bold text-indigo-600">Telegram</h4><p>@kkmrdr</p></div>
+        <WorksSection id="ai-stories" title="ИИ-истории" icon={<Cpu size={28} />} works={aiWorks} isAdmin={isAdmin} onAddWork={(w) => setAiWorks((p) => [w, ...p])} onDeleteWork={(i) => setAiWorks((p) => p.filter((_, x) => x !== i))} onReadWork={setReader} />
+        <WorksSection id="my-stories" title="Мои собственные рассказы" icon={<BookText size={28} />} works={stories} isAdmin={isAdmin} onAddWork={(w) => setStories((p) => [w, ...p])} onDeleteWork={(i) => setStories((p) => p.filter((_, x) => x !== i))} onReadWork={setReader} />
+        <WorksSection id="my-books" title="Мои собственные книги" icon={<LibraryBig size={28} />} works={books} isAdmin={isAdmin} onAddWork={(w) => setBooks((p) => [w, ...p])} onDeleteWork={(i) => setBooks((p) => p.filter((_, x) => x !== i))} onReadWork={setReader} />
+
+        <section id="contact" className="py-24 bg-stone-50 scroll-mt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="p-12 lg:p-16 bg-indigo-900 text-white">
+                  <h2 className="text-4xl font-serif font-bold mb-6">Связаться со мной</h2>
+                  <p className="text-indigo-200 mb-12 text-lg">Будь вы читателем, коллегой-писателем или заинтересованы в сотрудничестве, я буду рад вашему сообщению.</p>
+                  <div className="space-y-8">
+                    <div className="flex items-center space-x-6"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300 shrink-0"><Mail size={22} /></div><div className="min-w-0"><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Email</h4><p className="text-xl break-all">kostya.kozlov280.dmit@gmail.com</p></div></div>
+                    <a href="https://t.me/kkmrdr" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-6 group hover:bg-indigo-800/50 p-2 -m-2 rounded-xl transition-all"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300 group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0"><Send size={22} /></div><div><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Telegram</h4><p className="text-xl">@kkmrdr</p></div></a>
+                  </div>
+                </div>
+                <div className="p-12 lg:p-16">
+                  <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); window.location.href = `mailto:kostya.kozlov280.dmit@gmail.com?subject=${encodeURIComponent(String(fd.get('subject') || 'Сообщение с сайта'))}&body=${encodeURIComponent(`Имя: ${fd.get('name')}\nEmail: ${fd.get('email')}\n\n${fd.get('message')}`)}`; }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-2">Имя</label><input name="name" type="text" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Иван Иванов" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-2">Email</label><input name="email" type="email" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="ivan@example.com" /></div>
+                    </div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-2">Тема</label><input name="subject" type="text" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="Общий запрос" /></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-2">Сообщение</label><textarea name="message" className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none" placeholder="Ваше сообщение здесь..." rows={5} /></div>
+                    <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20"><Send size={18} /><span>Отправить сообщение</span></button>
+                  </form>
+                </div>
               </div>
-              <form className="space-y-4" onSubmit={e => { e.preventDefault(); window.location.href="mailto:kostya.kozlov280.dmit@gmail.com"; }}>
-                <input type="text" className="w-full border p-3 rounded-lg" placeholder="Имя" />
-                <textarea className="w-full border p-3 rounded-lg" placeholder="Сообщение" rows={4} />
-                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-lg font-bold flex items-center justify-center gap-2"><Send size={18} /> Отправить</button>
-              </form>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-white text-gray-500 py-12 border-t">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p>© {new Date().getFullYear()} Козлов Константин</p>
-          {isAdmin ? <button onClick={() => setIsAdmin(false)} className="text-red-500 font-bold">Выход</button> : <button onClick={() => { if(prompt('Пароль:')===(localStorage.getItem('authorPassword')||'author2024')) setIsAdmin(true); }} className="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm font-bold">Вход для автора</button>}
-          <p className="flex items-center gap-1">Сделано с <Heart size={14} className="text-red-400 fill-current" /></p>
+      <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            <div className="col-span-1 md:col-span-2"><div className="flex items-center space-x-2 mb-6"><BookOpen className="h-8 w-8 text-indigo-600" /><span className="text-2xl font-serif font-bold text-indigo-900 tracking-tight">Литературное хранилище</span></div><p className="text-gray-500 max-w-sm mb-6">Персональное хранилище литературных трудов и ИИ-экспериментов.</p></div>
+            {(hasAny || isAdmin) && (<div><h4 className="text-gray-900 font-bold mb-6">Навигация</h4><ul className="space-y-4"><li><a href="#" className="text-gray-500 hover:text-indigo-600 transition-colors">Главная</a></li><li><a href="#ai-stories" className="text-gray-500 hover:text-indigo-600 transition-colors">ИИ-Истории</a></li><li><a href="#my-stories" className="text-gray-500 hover:text-indigo-600 transition-colors">Рассказы</a></li><li><a href="#my-books" className="text-gray-500 hover:text-indigo-600 transition-colors">Книги</a></li></ul></div>)}
+          </div>
+          <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center space-x-4 flex-wrap justify-center gap-y-2">
+              <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Козлов Константин. Все права защищены.</p>
+              {isAdmin ? (
+                <div className="flex items-center space-x-2">
+                  <button onClick={() => { const np = prompt('Введите новый пароль:'); if (np) { localStorage.setItem('authorPassword', np); alert('Пароль успешно изменен!'); } }} className="px-4 py-2 bg-stone-100 text-stone-600 hover:bg-stone-200 rounded-full transition-all text-sm font-bold flex items-center gap-1"><KeyRound size={14} /><span>Сменить пароль</span></button>
+                  <button onClick={() => setIsAdmin(false)} className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-full transition-all flex items-center space-x-2 text-sm font-bold border border-red-500/20"><LogOut size={16} /><span>Выход</span></button>
+                </div>
+              ) : (
+                <button onClick={() => { if (checkPassword()) setIsAdmin(true); }} className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-full transition-all flex items-center space-x-2 text-sm font-bold shadow-lg shadow-indigo-600/30"><LogIn size={16} /><span>Вход для автора</span></button>
+              )}
+            </div>
+            <p className="text-gray-400 text-sm flex items-center">Сделано с <Heart size={14} className="mx-1 text-red-400 fill-current" /> для любителей литературы.</p>
+          </div>
         </div>
       </footer>
 
