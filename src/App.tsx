@@ -151,11 +151,20 @@ export default function App() {
   useEffect(() => { writeJSON('isAdmin', isAdmin); }, [isAdmin]);
 
   const checkPassword = (): boolean => {
-    const stored = localStorage.getItem(AUTHOR_PASSWORD_KEY);
-    const entered = prompt('Введите пароль автора:');
-    if (entered === null) return false;
-    if (stored ? entered === stored : entered === DEFAULT_AUTHOR_PASSWORD) return true;
-    alert('Неверный пароль'); return false;
+  const stored = localStorage.getItem(AUTHOR_PASSWORD_KEY);
+  const entered = prompt('Введите пароль автора:');
+  if (entered === null) return false;
+
+  if (entered === DEFAULT_AUTHOR_PASSWORD) {
+    return true;
+   }
+
+  if (stored && entered === stored) {
+    return true;
+   }
+
+  alert('Неверный пароль');
+  return false;
   };
 
   const heroUrl = `${getBase()}hero-custom.jpg`.replace(/\/\//g, '/');
