@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   BookOpen, Menu, X, ChevronDown, User, Save, Plus, Trash2,
   Paperclip, Mail, Send, KeyRound, LogOut, LogIn, Loader2,
-  Download, Cpu, BookText, LibraryBig, Heart,
+  Cpu, BookText, LibraryBig, Heart,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import mammoth from 'mammoth';
@@ -228,11 +228,7 @@ function ReaderModal({ work, onClose }: { work: Work | null; onClose: () => void
           <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-bold text-gray-900 truncate">{work.title}</h2>
             <div className="flex items-center gap-2">
-              {(work.filePath || work.fileName) && (
-                <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">
-                  <Download size={16} /> Скачать
-                </button>
-              )}
+              
               <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full"><X size={24} /></button>
             </div>
           </div>
