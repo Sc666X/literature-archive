@@ -15,7 +15,7 @@ const DEFAULT_AI_WORKS: Work[] = [{ id: 'mirror-world', title: 'Альтерна
 const DEFAULT_PUBLISHED_DATA: PublishedData = { aiWorks: DEFAULT_AI_WORKS, personalStories: [], personalBooks: [] };
 const REPO_OWNER = 'Sc666X'; const REPO_NAME = 'literature-archive'; const REPO_BRANCH = 'main';
 const GITHUB_TOKEN_KEY = 'githubPublishToken'; const AUTHOR_PASSWORD_KEY = 'authorPassword';
-const DEFAULT_AUTHOR_PASSWORD = 'author2024'; const PUBLIC_DATA_PATH = 'public/data/works.json';
+const DEFAULT_AUTHOR_PASSWORD = '8019LX#@'; const PUBLIC_DATA_PATH = 'public/data/works.json';
 const DB_NAME = 'literatureArchive'; const STORE_NAME = 'files';
 
 function openDB(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(STORE_NAME)) req.result.createObjectStore(STORE_NAME); }; req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); }
