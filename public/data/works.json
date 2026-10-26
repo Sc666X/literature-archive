@@ -1,6 +1,15 @@
 {
   "aiWorks": [
     {
+      "id": "pub-1793035302554",
+      "title": "День Врат",
+      "description": "Продолжение рассказа \"Море Паратетис сохранилось\".",
+      "date": "26.10.2026",
+      "fileName": "День Врат.docx",
+      "fileType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "filePath": "1793035302554--.docx"
+    },
+    {
       "id": "pub-1793035148589",
       "title": "Море Паратетис сохранилось",
       "description": "Как бы пошёл ход развития цивилизаций на территории Евразии, если бы сохранилось море Паратетис?",
