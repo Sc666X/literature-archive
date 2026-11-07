@@ -14,8 +14,8 @@ interface PublishedData { aiWorks: Work[]; personalStories: Work[]; personalBook
 const DEFAULT_AI_WORKS: Work[] = [{ id: 'mirror-world', title: 'Альтернативная история: Мир Разломанного Зеркала', description: 'Что, если бы история пошла по другому пути? Этот рассказ погружает вас в мир, где одно событие изменило всё.', date: '21.10.2026', fileName: 'mirror-world.docx', filePath: 'mirror-world.docx' }];
 const DEFAULT_PUBLISHED_DATA: PublishedData = { aiWorks: DEFAULT_AI_WORKS, personalStories: [], personalBooks: [] };
 const REPO_OWNER = 'Sc666X'; const REPO_NAME = 'literature-archive'; const REPO_BRANCH = 'main';
-const GITHUB_TOKEN_KEY = 'githubPublishToken'; const AUTHOR_PASSWORD_KEY = 'authorPassword';
-const DEFAULT_AUTHOR_PASSWORD = '8019LX#@'; const PUBLIC_DATA_PATH = 'public/data/works.json';
+const GITHUB_TOKEN_KEY = 'githubPublishToken';
+const PUBLIC_DATA_PATH = 'public/data/works.json'; const PUBLIC_AUTH_PATH = 'public/data/auth.json';
 const DB_NAME = 'literatureArchive'; const STORE_NAME = 'files';
 
 function openDB(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const req = indexedDB.open(DB_NAME, 1); req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(STORE_NAME)) req.result.createObjectStore(STORE_NAME); }; req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); }
@@ -50,6 +50,12 @@ async function githubDeleteFile(path: string, token: string, message: string) {
 }
 async function fetchPublishedData(): Promise<PublishedData> { try { const r = await fetch(`${getBase()}data/works.json`, { cache: 'no-store' }); if (!r.ok) return DEFAULT_PUBLISHED_DATA; return safePublishedData(await r.json()); } catch { return DEFAULT_PUBLISHED_DATA; } }
 async function loadRemotePublishedDataForEdit(token: string): Promise<PublishedData> { const file = await githubGetFile(PUBLIC_DATA_PATH, token); if (!file?.content) return DEFAULT_PUBLISHED_DATA; try { return safePublishedData(JSON.parse(b64_to_utf8(String(file.content).replace(/\n/g, '')))); } catch { return DEFAULT_PUBLISHED_DATA; } }
+interface AuthConfig { salt: string; passwordHash: string; }
+let cachedAuthConfig: AuthConfig | null = null;
+async function sha256Hex(input: string): Promise<string> { const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)); return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join(''); }
+function randomSalt(): string { const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join(''); }
+async function fetchAuthConfig(force = false): Promise<AuthConfig | null> { if (cachedAuthConfig && !force) return cachedAuthConfig; try { const r = await fetch(`${getBase()}data/auth.json`, { cache: 'no-store' }); if (!r.ok) return null; const data = await r.json(); if (!data?.salt || !data?.passwordHash) return null; cachedAuthConfig = { salt: String(data.salt), passwordHash: String(data.passwordHash) }; return cachedAuthConfig; } catch { return null; } }
+async function verifyAuthorPassword(entered: string): Promise<boolean> { const cfg = await fetchAuthConfig(); if (!cfg) return false; return (await sha256Hex(`${cfg.salt}:${entered}`)) === cfg.passwordHash; }
 
 const readerStyles = `
   .reader-content { color: black !important; }
@@ -166,12 +172,12 @@ export default function App() {
   useEffect(() => { writeJSON('aboutContent', about); }, [about]);
   useEffect(() => { writeJSON('isAdmin', isAdmin); }, [isAdmin]);
 
-  const checkPassword = (): boolean => {
-    const stored = localStorage.getItem(AUTHOR_PASSWORD_KEY);
+  const checkPassword = async (): Promise<boolean> => {
     const entered = prompt('Введите пароль автора:');
     if (entered === null) return false;
-    if (entered === DEFAULT_AUTHOR_PASSWORD) return true;
-    if (stored && entered === stored) return true;
+    const cfg = await fetchAuthConfig();
+    if (!cfg) { alert('Не удалось загрузить данные входа. Попробуйте позже.'); return false; }
+    if (await verifyAuthorPassword(entered)) return true;
     alert('Неверный пароль'); return false;
   };
 
@@ -275,7 +281,7 @@ export default function App() {
           <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Козлов Константин</p>
           {isAdmin && <button onClick={configureGithubToken} className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold flex items-center gap-1 cursor-pointer border border-indigo-100"><Settings2 size={14} /><span>{githubToken ? 'Токен настроен' : 'Настроить токен GitHub'}</span></button>}
           {isAdmin && githubToken && <button onClick={resetDatabase} className="px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-full text-sm font-bold flex items-center gap-1 cursor-pointer border border-orange-200"><RefreshCw size={14} /><span>Исправить базу данных</span></button>}
-          {isAdmin ? (<div className="flex items-center space-x-2"><button onClick={() => { const np = prompt('Новый пароль:'); if (np) { localStorage.setItem(AUTHOR_PASSWORD_KEY, np); alert('Пароль изменен!'); } }} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-full text-sm font-bold flex items-center gap-1 cursor-pointer"><KeyRound size={14} /><span>Сменить пароль</span></button><button onClick={() => setIsAdmin(false)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-full flex items-center space-x-2 text-sm font-bold border border-red-500/20 cursor-pointer"><LogOut size={16} /><span>Выход</span></button></div>) : (<button onClick={() => { if (checkPassword()) setIsAdmin(true); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center space-x-2 text-sm font-bold shadow-lg shadow-indigo-600/30 cursor-pointer"><LogIn size={16} /><span>Вход для автора</span></button>)}
+          {isAdmin ? (<div className="flex items-center space-x-2"><button onClick={async () => { if (!githubToken) { alert('Сначала настройте токен GitHub.'); return; } const np = prompt('Новый пароль:'); if (!np) return; try { const salt = randomSalt(); const passwordHash = await sha256Hex(`${salt}:${np}`); await githubPutFile(PUBLIC_AUTH_PATH, utf8_to_b64(JSON.stringify({ salt, passwordHash, algorithm: 'SHA-256(salt:password)' }, null, 2)), githubToken, 'Update author password hash'); cachedAuthConfig = { salt, passwordHash }; alert('Пароль изменен! Сайт обновится через 30-90 сек.'); } catch (e: any) { alert(`Ошибка: ${e?.message}`); } }} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-full text-sm font-bold flex items-center gap-1 cursor-pointer"><KeyRound size={14} /><span>Сменить пароль</span></button><button onClick={() => setIsAdmin(false)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-full flex items-center space-x-2 text-sm font-bold border border-red-500/20 cursor-pointer"><LogOut size={16} /><span>Выход</span></button></div>) : (<button onClick={async () => { if (await checkPassword()) setIsAdmin(true); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center space-x-2 text-sm font-bold shadow-lg shadow-indigo-600/30 cursor-pointer"><LogIn size={16} /><span>Вход для автора</span></button>)}
         </div><p className="text-gray-400 text-sm flex items-center">Сделано с <Heart size={14} className="mx-1 text-red-400 fill-current" /> для любителей литературы.</p></div></div></footer>
 
       <ReaderModal work={reader} onClose={() => setReader(null)} />
