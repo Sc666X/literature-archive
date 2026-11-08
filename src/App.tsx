@@ -68,6 +68,318 @@ const readerStyles = `
   .reader-content ul { list-style-type: disc; } .reader-content ol { list-style-type: decimal; }
 `;
 
+type LegalDocKey = 'privacy' | 'consentPd' | 'consentMarketing';
+
+interface LegalSection {
+  heading?: string;
+  paragraphs?: string[];
+  bullets?: string[];
+  afterBullets?: string[];
+}
+
+interface LegalDocument {
+  key: LegalDocKey;
+  title: string;
+  subtitle?: string;
+  editionDate: string;
+  sections: LegalSection[];
+}
+
+const LEGAL_DOCUMENTS: Record<LegalDocKey, LegalDocument> = {
+  privacy: {
+    key: 'privacy',
+    title: 'Политика конфиденциальности',
+    editionDate: '08.11.2026',
+    sections: [
+      {
+        heading: '1. ОБЩИЕ ПОЛОЖЕНИЯ ПОЛИТИКИ КОНФИДЕНЦИАЛЬНОСТИ',
+        paragraphs: [
+          '1.1. Настоящая Политика конфиденциальности (далее — Политика) составлена в соответствии с частью 2 статьи 18.1 Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» (далее — Закон о персональных данных), а также иными нормативными правовыми актами Российской Федерации в области защиты и обработки персональных данных и действует в отношении всех персональных данных (далее — Данные), которые Оператор может получить от субъекта персональных данных, являющегося посетителем и пользователем интернет-ресурса (далее — Пользователь), расположенного по адресу: https://sc666x.github.io/literature-archive/ (далее — Ресурс, Сайт).',
+          '1.2. Оператор — лицо, самостоятельно организующее и осуществляющее обработку персональных данных, а также определяющее цели такой обработки, состав персональных данных, подлежащих обработке, и действия (операции), совершаемые с персональными данными. Оператором является: Индивидуальный предприниматель Козлов Константин Дмитриевич, ИНН 143408753004, адрес электронной почты: kostya.kozlov280.dmit@gmail.com.',
+          '1.3. Управление Ресурсом и обработка поступающих обращений Пользователей осуществляются непосредственно Оператором без привлечения сторонних сотрудников.',
+          '1.4. Оператор обеспечивает защиту обрабатываемых персональных данных от несанкционированного доступа и разглашения, неправомерного использования, изменения, блокирования или утраты в соответствии с требованиями Федерального закона № 152-ФЗ.',
+          '1.5. Оператор вправе вносить изменения в настоящую Политику. При внесении изменений указывается дата актуальной редакции документа. Новая редакция Политики вступает в силу с момента её размещения на Ресурсе, если иное не предусмотрено новой редакцией Политики.',
+          '1.6. Настоящая Политика является общедоступным информационным документом Оператора и постоянно размещена в нижней части (подвале) Ресурса. Просмотр литературных произведений и материалов Ресурса является свободным и не требует регистрации или предоставления Пользователем персональных данных. При направлении сообщения через форму обратной связи на Ресурсе Пользователь предварительно знакомится с настоящей Политикой и выражает отдельное добровольное согласие на обработку своих персональных данных путём проставления отметки в соответствующем чекбоксе формы.',
+          '1.7. Направление Пользователю рекламно-информационных материалов осуществляется исключительно при наличии отдельного добровольного согласия Пользователя, выраженного путём проставления отметки в дополнительном (необязательном) чекбоксе формы обратной связи на Ресурсе.',
+          '1.8. Пользователь вправе в любой момент отозвать ранее предоставленное согласие на обработку персональных данных, направив уведомление Оператору на адрес электронной почты: kostya.kozlov280.dmit@gmail.com с пометкой «Отзыв согласия на обработку персональных данных». Оператор прекращает обработку персональных данных и уничтожает их в сроки, установленные законодательством Российской Федерации (не позднее 30 календарных дней с даты поступления отзыва, а в случаях, предусмотренных статьёй 21 Закона о персональных данных, — в течение 10 рабочих дней), если их дальнейшее хранение не требуется в силу закона, и направляет Пользователю ответное уведомление по электронной почте.',
+          '1.9. Ресурс не использует файлы cookies, сторонние счётчики веб-аналитики (Яндекс.Метрика, Google Analytics и аналогичные) или рекламные трекеры для сбора сведений о посетителях. Технические данные работы интерфейса Ресурса (локальный кэш каталога произведений, а в режиме автора — настройки авторизации и локальные черновики файлов) сохраняются исключительно на стороне браузера самого Пользователя (Local Storage и IndexedDB) и автоматически третьим лицам не передаются.'
+        ]
+      },
+      {
+        heading: '2. СОСТАВ И ОСОБЕННОСТИ ПОЛУЧЕНИЯ ПЕРСОНАЛЬНЫХ ДАННЫХ',
+        paragraphs: [
+          '2.1. Оператор обрабатывает только те персональные данные, которые соответствуют заявленным целям обработки и самостоятельно предоставляются Пользователем при обращении к Оператору:'
+        ],
+        bullets: [
+          'имя (псевдоним или фамилия, имя, отчество — в том объёме, в каком их указал сам Пользователь в форме обратной связи);',
+          'адрес электронной почты (e-mail);',
+          'тема и текст сообщения (включая иные сведения, добровольно указанные Пользователем в тексте обращения);',
+          'при самостоятельном переходе Пользователя по прямой ссылке для связи с Оператором в мессенджере Telegram (@kkmrdr) — отображаемое имя, никнейм (username) и идентификатор аккаунта в Telegram, передаваемые самим мессенджером при отправке сообщения.'
+        ],
+        afterBullets: [
+          '2.2. Ресурс представляет собой статическое одностраничное веб-приложение без серверной базы данных анкет посетителей. Форма «Связаться со мной» работает по протоколу mailto: — при нажатии кнопки «Отправить сообщение» на устройстве Пользователя открывается его почтовая программа с подготовленным текстом письма в адрес Оператора (kostya.kozlov280.dmit@gmail.com), которое Пользователь отправляет самостоятельно.',
+          '2.3. При загрузке страниц статического хостинга Ресурса (GitHub Pages) серверами хостинг-провайдера в автоматическом режиме обрабатываются стандартные сетевые параметры HTTP-запроса (IP-адрес, сведения о браузере и операционной системе User-Agent, время обращения) исключительно в целях технической доставки содержимого страницы; Оператор не ведёт самостоятельного сбора, хранения или сопоставления указанных технических данных с личностью Пользователя.',
+          '2.4. Оператор не собирает специальные категории персональных данных и биометрические персональные данные. Пользователь не вправе предоставлять через Ресурс персональные данные третьих лиц без наличия у него законных оснований.'
+        ]
+      },
+      {
+        heading: '3. ЦЕЛИ СБОРА И ОБРАБОТКИ ПЕРСОНАЛЬНЫХ ДАННЫХ',
+        paragraphs: [
+          '3.1. Персональные данные Пользователя обрабатываются Оператором исключительно в следующих целях:'
+        ],
+        bullets: [
+          'установление обратной связи с Пользователем, рассмотрение входящих писем, читательских отзывов, вопросов и предложений о литературном или ином сотрудничестве, направление ответов Пользователю;',
+          'направление Пользователю рекламно-информационных материалов (анонсов новых рассказов, книг, литературных публикаций и авторских проектов Оператора) — строго при наличии отдельного согласия Пользователя;',
+          'исполнение обязанностей Оператора, предусмотренных законодательством Российской Федерации, включая рассмотрение запросов и отзывов согласий субъектов персональных данных.'
+        ],
+        afterBullets: [
+          '3.2. Обработка персональных данных, несовместимая с указанными целями, не допускается. В случае изменения целей обработки Оператор предварительно уведомляет Пользователя и запрашивает отдельное согласие.'
+        ]
+      },
+      {
+        heading: '4. ПОРЯДОК, СРОКИ ОБРАБОТКИ И ПЕРЕДАЧА ДАННЫХ',
+        paragraphs: [
+          '4.1. Обработка персональных данных осуществляется смешанным способом (с использованием средств автоматизации и без использования таких средств) в соответствии с требованиями Федерального закона № 152-ФЗ и включает: сбор, запись, систематизацию, хранение, уточнение (обновление, изменение), использование, блокирование, удаление и уничтожение.',
+          '4.2. Персональные данные хранятся и обрабатываются не дольше, чем этого требуют цели обработки: в течение 5 (пяти) лет с момента предоставления согласия либо до момента достижения цели обращения или поступления от Пользователя отзыва согласия — в зависимости от того, какое событие наступит раньше. По истечении срока или при отзыве согласия данные удаляются (уничтожаются) Оператором.',
+          '4.3. Оператор не публикует персональные данные Пользователей в открытом доступе и не передаёт их третьим лицам, за исключением следующих случаев:'
+        ],
+        bullets: [
+          'получения отдельного прямого согласия Пользователя на такую передачу;',
+          'предоставления информации по законному мотивированному запросу уполномоченных государственных органов Российской Федерации в случаях и порядке, прямо установленных законодательством РФ.'
+        ]
+      },
+      {
+        heading: '5. ПРАВА ПОЛЬЗОВАТЕЛЯ И МЕРЫ ЗАЩИТЫ',
+        paragraphs: [
+          '5.1. Пользователь вправе получать у Оператора сведения, касающиеся обработки его персональных данных (статья 14 Закона о персональных данных), требовать уточнения своих персональных данных, их блокирования или уничтожения в случае, если данные являются неполными, устаревшими, неточными или незаконно полученными, а также в любой момент отозвать предоставленные согласия путём направления письма на e-mail: kostya.kozlov280.dmit@gmail.com.',
+          '5.2. Оператор принимает необходимые правовые, организационные и технические меры для защиты персональных данных от неправомерного или случайного доступа, уничтожения, изменения, блокирования, копирования, предоставления и распространения (в том числе ограничение доступа к почтовому ящику и устройствам Оператора, использование сложных паролей, двухфакторной аутентификации и средств антивирусной защиты) в соответствии со статьёй 19 Федерального закона № 152-ФЗ.'
+        ]
+      },
+      {
+        heading: '6. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ',
+        paragraphs: [
+          '6.1. Настоящая Политика регулирует отношения между Пользователем и Оператором в части обработки персональных данных при использовании Ресурса https://sc666x.github.io/literature-archive/.',
+          '6.2. Вопросы, не урегулированные настоящей Политикой, разрешаются в соответствии с действующим законодательством Российской Федерации. По всем вопросам, связанным с обработкой персональных данных, Пользователь может связаться с Оператором по электронной почте: kostya.kozlov280.dmit@gmail.com.'
+        ]
+      }
+    ]
+  },
+  consentPd: {
+    key: 'consentPd',
+    title: 'Согласие на обработку персональных данных',
+    subtitle: 'СОГЛАСИЕ субъекта на обработку персональных данных',
+    editionDate: '08.11.2026',
+    sections: [
+      {
+        paragraphs: [
+          'Действуя свободно, своей волей и в своем интересе, а также подтверждая свою дееспособность, я (далее — Пользователь) путём проставления отметки (галочки) в соответствующем чекбоксе формы обратной связи на интернет-ресурсе https://sc666x.github.io/literature-archive/ (далее — Ресурс) предоставляю настоящее отдельное согласие на обработку моих персональных данных Оператору — Индивидуальному предпринимателю Козлову Константину Дмитриевичу, ИНН 143408753004, e-mail: kostya.kozlov280.dmit@gmail.com (далее — Оператор).'
+        ]
+      },
+      {
+        heading: 'Перечень персональных данных, на обработку которых даётся согласие:',
+        bullets: [
+          'имя (псевдоним или фамилия, имя, отчество — в объёме, самостоятельно указанном Пользователем в форме обратной связи);',
+          'адрес электронной почты (e-mail);',
+          'тема и текст сообщения (а также иные сведения, которые Пользователь по собственной инициативе указал в тексте обращения).'
+        ]
+      },
+      {
+        heading: 'Цели обработки персональных данных:',
+        bullets: [
+          'установление с Пользователем обратной связи, рассмотрение направленного сообщения, читательского отзыва, вопроса или предложения о сотрудничестве и подготовка ответа Оператора;',
+          'учёт факта предоставления настоящего согласия и взаимодействие с Пользователем по вопросам реализации его прав как субъекта персональных данных.'
+        ],
+        afterBullets: [
+          'Настоящее согласие не распространяется на направление рекламно-информационных рассылок (для которых на Ресурсе предусмотрен отдельный необязательный чекбокс и самостоятельное согласие).'
+        ]
+      },
+      {
+        heading: 'Перечень действий и способы обработки:',
+        paragraphs: [
+          'Согласие предоставляется на совершение следующих действий (операций) с персональными данными с использованием средств автоматизации и без использования таких средств: сбор, запись, систематизация, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, блокирование, удаление и уничтожение персональных данных в соответствии с требованиями Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных».'
+        ]
+      },
+      {
+        heading: 'Срок действия согласия:',
+        paragraphs: [
+          'Настоящее согласие действует в течение 5 (пяти) лет с момента его предоставления либо до момента достижения целей обработки или поступления от Пользователя отзыва согласия — в зависимости от того, какое событие наступит раньше.'
+        ]
+      },
+      {
+        heading: 'Пользователь осознаёт и подтверждает, что:',
+        bullets: [
+          'имеет право запрашивать у Оператора информацию об обработке своих персональных данных в порядке статьи 14 Федерального закона № 152-ФЗ;',
+          'отказ от предоставления настоящего согласия делает невозможной отправку сообщения через форму обратной связи на Ресурсе (при этом чтение и просмотр опубликованных на Ресурсе произведений остаются полностью доступными);',
+          'вправе отозвать настоящее согласие в любой момент, направив уведомление в свободной форме с пометкой «Отзыв согласия на обработку персональных данных» на адрес электронной почты Оператора: kostya.kozlov280.dmit@gmail.com; Оператор прекращает обработку и уничтожает персональные данные в установленный законом срок (не позднее 30 календарных дней с даты поступления отзыва, если иное не требуется по закону) с направлением Пользователю уведомления по e-mail;',
+          'предоставленные им персональные данные являются точными и достоверными, относятся лично к Пользователю и не нарушают прав и законных интересов третьих лиц.'
+        ]
+      },
+      {
+        heading: 'Оператор обязуется:',
+        bullets: [
+          'соблюдать конфиденциальность персональных данных и не передавать их третьим лицам без отдельного прямого согласия Пользователя (за исключением случаев, прямо предусмотренных законодательством Российской Федерации);',
+          'не публиковать и не распространять персональные данные Пользователя в открытом доступе;',
+          'обеспечивать необходимые правовые, организационные и технические меры защиты персональных данных в соответствии с законодательством Российской Федерации.'
+        ]
+      }
+    ]
+  },
+  consentMarketing: {
+    key: 'consentMarketing',
+    title: 'Согласие на получение рекламно-информационных материалов',
+    subtitle: 'СОГЛАСИЕ на получение рекламно-информационных материалов',
+    editionDate: '08.11.2026',
+    sections: [
+      {
+        paragraphs: [
+          'В соответствии с частью 1 статьи 18 Федерального закона от 13.03.2006 № 38-ФЗ «О рекламе» и Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных», действуя свободно, своей волей и в своем интересе, проставляя отметку (галочку) в отдельном необязательном чекбоксе «Я даю согласие на получение рекламно-информационных материалов» в форме обратной связи на интернет-ресурсе https://sc666x.github.io/literature-archive/ (далее — Ресурс), я (далее — Пользователь) выражаю свое предварительное согласие на получение от Индивидуального предпринимателя Козлова Константина Дмитриевича, ИНН 143408753004, e-mail: kostya.kozlov280.dmit@gmail.com (далее — Оператор), рекламно-информационных материалов, в том числе:'
+        ],
+        bullets: [
+          'анонсов выхода новых литературных произведений, рассказов, книг и авторских серий Оператора;',
+          'уведомлений о новых публикациях и обновлениях разделов на Ресурсе https://sc666x.github.io/literature-archive/;',
+          'информации о творческих проектах, авторских встречах, предзаказах книг и специальных предложениях Оператора.'
+        ]
+      },
+      {
+        heading: 'Способ направления материалов и используемые данные:',
+        bullets: [
+          'отправка электронных писем на адрес электронной почты (e-mail), самостоятельно указанный Пользователем при заполнении формы обратной связи на Ресурсе (с возможным обращением по указанному Пользователем имени).'
+        ]
+      },
+      {
+        heading: 'Добровольность и условия конфиденциальности:',
+        paragraphs: [
+          'Предоставление настоящего согласия является полностью добровольным и не влияет на возможность просмотра материалов Ресурса или отправки обычного сообщения через форму обратной связи.',
+          'Предоставляя настоящее согласие, я подтверждаю, что условия настоящего согласия мне понятны, указанный мною адрес электронной почты принадлежит лично мне и является достоверным, а также осознаю запрет на указание контактных данных третьих лиц без их согласия.',
+          'Оператор использует адрес электронной почты и имя Пользователя исключительно для направления перечисленных рекламно-информационных материалов, обеспечивает их конфиденциальность в соответствии с Федеральным законом № 152-ФЗ и не передаёт контактные данные Пользователя сторонним рекламодателям.'
+        ]
+      },
+      {
+        heading: 'Срок действия согласия и порядок отказа от рассылки:',
+        paragraphs: [
+          'Настоящее согласие действует в течение 5 (пяти) лет с момента его предоставления либо до момента отказа Пользователя от получения рекламно-информационных материалов (отзыва согласия) — в зависимости от того, какое событие наступит раньше.',
+          'Настоящее согласие может быть отозвано мною в любой момент путём направления письменного отказа (например, с пометкой «Отказ от рассылки» или «Отписаться») в свободной форме на электронную почту Оператора: kostya.kozlov280.dmit@gmail.com (в том числе ответным письмом на любое полученное сообщение).',
+          'В соответствии с частью 1 статьи 18 Федерального закона № 38-ФЗ «О рекламе» Оператор незамедлительно прекращает направление рекламно-информационных материалов на адрес электронной почты Пользователя с момента получения отказа (отзыва согласия) и по запросу Пользователя направляет подтверждение прекращения рассылки.'
+        ]
+      }
+    ]
+  }
+};
+
+function LegalModal({ docKey, onClose }: { docKey: LegalDocKey | null; onClose: () => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const doc = docKey ? LEGAL_DOCUMENTS[docKey] : null;
+
+  useEffect(() => {
+    if (!docKey) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    scrollRef.current?.scrollTo(0, 0);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [docKey, onClose]);
+
+  return (
+    <AnimatePresence>
+      {doc && (
+        <motion.div
+          key={doc.key}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/65 backdrop-blur-sm p-3 sm:p-6"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.18 }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="legal-modal-title"
+            className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+          >
+            <div className="flex items-start justify-between gap-4 px-6 sm:px-8 py-5 border-b border-gray-200 bg-gray-50 shrink-0">
+              <div>
+                <h2 id="legal-modal-title" className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
+                  {doc.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  Редакция документа от {doc.editionDate}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Закрыть документ"
+                className="p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-900 rounded-full transition-all shrink-0 cursor-pointer"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white px-6 sm:px-10 py-8">
+              <div className="max-w-3xl mx-auto text-gray-800 text-[15px] sm:text-base leading-relaxed space-y-6">
+                {doc.subtitle && (
+                  <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                    {doc.subtitle}
+                  </p>
+                )}
+                {doc.sections.map((section, idx) => (
+                  <div key={idx} className="space-y-3">
+                    {section.heading && (
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 pt-2">
+                        {section.heading}
+                      </h3>
+                    )}
+                    {section.paragraphs?.map((p, pIdx) => (
+                      <p key={pIdx} className="text-gray-800 leading-relaxed">
+                        {p}
+                      </p>
+                    ))}
+                    {section.bullets && (
+                      <ul className="list-disc pl-6 space-y-2 text-gray-800">
+                        {section.bullets.map((b, bIdx) => (
+                          <li key={bIdx} className="leading-relaxed">
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {section.afterBullets?.map((p, aIdx) => (
+                      <p key={aIdx} className="text-gray-800 leading-relaxed">
+                        {p}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-6 sm:px-8 py-4 border-t border-gray-200 bg-gray-50 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Закрыть
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function getFileType(name: string): 'docx' | 'doc' | 'pdf' | 'txt' | 'other' {
   const n = (name || '').toLowerCase();
   if (n.endsWith('.docx')) return 'docx'; if (n.endsWith('.doc')) return 'doc';
@@ -160,6 +472,9 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>(() => readJSON<boolean>('isAdmin', false));
   const [aboutOpen, setAboutOpen] = useState(false);
   const [reader, setReader] = useState<Work | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalDocKey | null>(null);
+  const [consentPrivacy, setConsentPrivacy] = useState(false);
+  const [consentMarketing, setConsentMarketing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [githubToken, setGithubToken] = useState<string>(() => localStorage.getItem(GITHUB_TOKEN_KEY) || '');
   const [syncing, setSyncing] = useState(false);
@@ -273,10 +588,101 @@ export default function App() {
         <WorksSection id="my-stories" title="Мои собственные рассказы" icon={<BookText size={28} />} works={stories} isAdmin={isAdmin} publishReady={Boolean(githubToken)} sectionKey="personalStories" onCreate={createWork} onDelete={deleteWork} onRead={setReader} />
         <WorksSection id="my-books" title="Мои собственные книги" icon={<LibraryBig size={28} />} works={books} isAdmin={isAdmin} publishReady={Boolean(githubToken)} sectionKey="personalBooks" onCreate={createWork} onDelete={deleteWork} onRead={setReader} />
 
-        <section id="contact" className="py-24 bg-stone-50 scroll-mt-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="bg-white rounded-3xl shadow-xl overflow-hidden"><div className="grid grid-cols-1 lg:grid-cols-2"><div className="p-12 lg:p-16 bg-indigo-900 text-white"><h2 className="text-4xl font-serif font-bold mb-6">Связаться со мной</h2><p className="text-indigo-200 mb-12 text-lg">Буду рад вашему сообщению.</p><div className="space-y-8"><div className="flex items-center space-x-6"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300"><Mail size={22} /></div><div><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Email</h4><p className="text-xl break-all">kostya.kozlov280.dmit@gmail.com</p></div></div><a href="https://t.me/kkmrdr" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-6 group hover:bg-indigo-800/50 p-2 -m-2 rounded-xl cursor-pointer"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300 group-hover:bg-indigo-500 group-hover:text-white transition-all"><Send size={22} /></div><div><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Telegram</h4><p className="text-xl">@kkmrdr</p></div></a></div></div><div className="p-12 lg:p-16"><form className="space-y-6" onSubmit={e => { e.preventDefault(); const fd = new FormData(e.currentTarget); window.location.href = `mailto:kostya.kozlov280.dmit@gmail.com?subject=${encodeURIComponent(String(fd.get('subject') || 'Сообщение'))}&body=${encodeURIComponent(`Имя: ${fd.get('name')}\nEmail: ${fd.get('email')}\n\n${fd.get('message')}`)}`; }}><div className="grid grid-cols-1 sm:grid-cols-2 gap-6"><div><label className="block text-sm font-medium text-gray-700 mb-2">Имя</label><input name="name" placeholder="Иван Иванов" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Email</label><input name="email" type="email" placeholder="ivan@example.com" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Тема</label><input name="subject" placeholder="Общий запрос" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Сообщение</label><textarea name="message" rows={5} placeholder="Ваше сообщение..." className="w-full px-4 py-3 rounded-lg border border-gray-200 resize-none" /></div><button type="submit" className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center justify-center space-x-2 cursor-pointer"><Send size={18} /><span>Отправить сообщение</span></button></form></div></div></div></div></section>
+        <section id="contact" className="py-24 bg-stone-50 scroll-mt-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="bg-white rounded-3xl shadow-xl overflow-hidden"><div className="grid grid-cols-1 lg:grid-cols-2"><div className="p-12 lg:p-16 bg-indigo-900 text-white"><h2 className="text-4xl font-serif font-bold mb-6">Связаться со мной</h2><p className="text-indigo-200 mb-12 text-lg">Буду рад вашему сообщению.</p><div className="space-y-8"><div className="flex items-center space-x-6"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300"><Mail size={22} /></div><div><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Email</h4><p className="text-xl break-all">kostya.kozlov280.dmit@gmail.com</p></div></div><a href="https://t.me/kkmrdr" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-6 group hover:bg-indigo-800/50 p-2 -m-2 rounded-xl cursor-pointer"><div className="w-12 h-12 bg-indigo-800 rounded-full flex items-center justify-center text-indigo-300 group-hover:bg-indigo-500 group-hover:text-white transition-all"><Send size={22} /></div><div><h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-widest">Telegram</h4><p className="text-xl">@kkmrdr</p></div></a></div></div><div className="p-12 lg:p-16"><form className="space-y-6" onSubmit={e => {
+          e.preventDefault();
+          if (!consentPrivacy) return;
+          const fd = new FormData(e.currentTarget);
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('ru-RU');
+          const timeStr = now.toLocaleTimeString('ru-RU');
+          const bodyLines = [
+            `Имя: ${fd.get('name') || ''}`,
+            `Email: ${fd.get('email') || ''}`,
+            '',
+            String(fd.get('message') || ''),
+            '',
+            '---',
+            'Согласие на обработку ПДн: Да',
+            `Согласие на рекламную рассылку: ${consentMarketing ? 'Да' : 'Нет'}`,
+            `Дата отправки: ${dateStr}`,
+            `Время отправки: ${timeStr}`,
+          ].join('\n');
+          window.location.href = `mailto:kostya.kozlov280.dmit@gmail.com?subject=${encodeURIComponent(String(fd.get('subject') || 'Сообщение'))}&body=${encodeURIComponent(bodyLines)}`;
+        }}><div className="grid grid-cols-1 sm:grid-cols-2 gap-6"><div><label className="block text-sm font-medium text-gray-700 mb-2">Имя</label><input name="name" placeholder="Иван Иванов" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Email</label><input name="email" type="email" placeholder="ivan@example.com" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Тема</label><input name="subject" placeholder="Общий запрос" className="w-full px-4 py-3 rounded-lg border border-gray-200" /></div><div><label className="block text-sm font-medium text-gray-700 mb-2">Сообщение</label><textarea name="message" rows={5} placeholder="Ваше сообщение..." className="w-full px-4 py-3 rounded-lg border border-gray-200 resize-none" /></div>
+          <div className="space-y-3 pt-1">
+            <div className="flex items-start gap-3">
+              <input
+                id="consent-privacy"
+                type="checkbox"
+                checked={consentPrivacy}
+                onChange={e => setConsentPrivacy(e.target.checked)}
+                aria-labelledby="consent-privacy-label"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+              />
+              <div id="consent-privacy-label" className="text-sm text-gray-700 leading-relaxed select-none">
+                <span onClick={() => setConsentPrivacy(v => !v)} className="cursor-pointer">Я ознакомился(ась) с </span>
+                <button
+                  type="button"
+                  onClick={() => setLegalDoc('privacy')}
+                  className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 font-medium cursor-pointer"
+                >
+                  Политикой конфиденциальности
+                </button>
+                <span onClick={() => setConsentPrivacy(v => !v)} className="cursor-pointer"> и даю </span>
+                <button
+                  type="button"
+                  onClick={() => setLegalDoc('consentPd')}
+                  className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 font-medium cursor-pointer"
+                >
+                  согласие на обработку моих персональных данных
+                </button>
+                <span onClick={() => setConsentPrivacy(v => !v)} className="cursor-pointer">.</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <input
+                id="consent-marketing"
+                type="checkbox"
+                checked={consentMarketing}
+                onChange={e => setConsentMarketing(e.target.checked)}
+                aria-labelledby="consent-marketing-label"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+              />
+              <div id="consent-marketing-label" className="text-sm text-gray-700 leading-relaxed select-none">
+                <span onClick={() => setConsentMarketing(v => !v)} className="cursor-pointer">Я даю согласие на получение </span>
+                <button
+                  type="button"
+                  onClick={() => setLegalDoc('consentMarketing')}
+                  className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 font-medium cursor-pointer"
+                >
+                  рекламно-информационных материалов
+                </button>
+                <span onClick={() => setConsentMarketing(v => !v)} className="cursor-pointer">.</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 leading-relaxed pt-1">
+              Нажимая кнопку отправки, вы подтверждаете достоверность предоставленных данных.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={!consentPrivacy}
+            className={`w-full py-4 rounded-lg font-bold flex items-center justify-center space-x-2 transition-all disabled:cursor-not-allowed! ${
+              consentPrivacy
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-lg shadow-indigo-600/20'
+                : 'bg-gray-200 text-gray-400'
+            }`}
+          >
+            <Send size={18} />
+            <span>Отправить сообщение</span>
+          </button>
+        </form></div></div></div></div></section>
       </main>
 
-      <footer className="bg-white border-t border-gray-100 pt-16 pb-8"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12"><div className="col-span-1 md:col-span-2"><div className="flex items-center space-x-2 mb-6"><BookOpen className="h-8 w-8 text-indigo-600" /><span className="text-2xl font-serif font-bold text-indigo-900">Литературное хранилище</span></div><p className="text-gray-500 max-w-sm mb-6">Персональное хранилище литературных трудов и ИИ-экспериментов.</p></div>{(hasAny || isAdmin) && <div><h4 className="text-gray-900 font-bold mb-6">Навигация</h4><ul className="space-y-4">{navLinks.map(l => <li key={l.href}><a href={l.href} className="text-gray-500 hover:text-indigo-600 cursor-pointer">{l.label}</a></li>)}</ul></div>}</div>
+      <footer className="bg-white border-t border-gray-100 pt-16 pb-8"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12"><div className={(hasAny || isAdmin) ? 'col-span-1 md:col-span-2' : 'col-span-1 md:col-span-3'}><div className="flex items-center space-x-2 mb-6"><BookOpen className="h-8 w-8 text-indigo-600" /><span className="text-2xl font-serif font-bold text-indigo-900">Литературное хранилище</span></div><p className="text-gray-500 max-w-sm mb-6">Персональное хранилище литературных трудов и ИИ-экспериментов.</p></div>{(hasAny || isAdmin) && <div><h4 className="text-gray-900 font-bold mb-6">Навигация</h4><ul className="space-y-4">{navLinks.map(l => <li key={l.href}><a href={l.href} className="text-gray-500 hover:text-indigo-600 cursor-pointer">{l.label}</a></li>)}</ul></div>}<div><h4 className="text-gray-900 font-bold mb-6">Правовая информация</h4><ul className="space-y-4"><li><button type="button" onClick={() => setLegalDoc('privacy')} className="text-left text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer">Политика конфиденциальности</button></li><li><button type="button" onClick={() => setLegalDoc('consentPd')} className="text-left text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer">Согласие на обработку персональных данных</button></li><li><button type="button" onClick={() => setLegalDoc('consentMarketing')} className="text-left text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer">Согласие на получение рекламно-информационных материалов</button></li></ul></div></div>
         <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4"><div className="flex items-center space-x-3 flex-wrap justify-center gap-y-2">
           <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Козлов Константин</p>
           {isAdmin && <button onClick={configureGithubToken} className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold flex items-center gap-1 cursor-pointer border border-indigo-100"><Settings2 size={14} /><span>{githubToken ? 'Токен настроен' : 'Настроить токен GitHub'}</span></button>}
@@ -285,6 +691,7 @@ export default function App() {
         </div><p className="text-gray-400 text-sm flex items-center">Сделано с <Heart size={14} className="mx-1 text-red-400 fill-current" /> для любителей литературы.</p></div></div></footer>
 
       <ReaderModal work={reader} onClose={() => setReader(null)} />
+      <LegalModal docKey={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 }
